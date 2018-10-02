@@ -3,6 +3,7 @@ from . import models
 import math
 import re
 collection = models.main()
+WORDS = models.get_dict()
 import json
 # Create your views here.
 from django.http import HttpResponse
@@ -15,10 +16,12 @@ def search(request):
 	print(user_input)
 	if user_input is not None:
 		user_input = str(user_input).lower()
-		response = search_regx(user_input)
+		response = suggest_with_corrections(user_input)[:24]
+		# response = score_matches(user_input)
 	else:
 		response = (dict(msg= "No input priovided"))
 	return HttpResponse(json.dumps(response), content_type="application/json")
+	# return HttpResponse(json.dumps(response), content_type="application/json")
 
 def do_search(user_input):
 	# suggestions = []
@@ -60,10 +63,9 @@ def do_search(user_input):
 			# 	suggestions.append(item[0])
 
 	directs.sort(key = len)
-	# suggestions.sort(key = len)
 	return dict(suggestions=(priority + directs + suggestions)[:25])
 
-def search_regx(user_input):
+def search_regex(user_input):
 	suggestions = []
 	priority = []
 	directs = []
@@ -88,40 +90,61 @@ def search_regx(user_input):
 	suggestions.sort()
 	return dict(suggestions=(priority + directs + suggestions)[:25])
 
-def lets_do_it(user_input):
+def suggest_with_corrections(user_input):
+	match = []
+	perfects = []
+	good = []
+	corrections = []
+	for item in collection:
+		if(len(good) + len(perfects) + len(match) == 25):
+			break
+		if item[0].startswith(user_input):
+			if user_input == item[0]:
+				match.append(item[0])
+			else:
+				perfects.append(item[0])
+		elif user_input in item[0] and len(item[0]) >= len(user_input):
+			good.append(item[0])
+	corrections = list(candidates(user_input))
+	good.sort(key = len)
+	perfects.sort(key = len)
+	corrections.sort(key = len)
+	# print(corrections)
+	return match + perfects + good + corrections
+
+def score_matches(user_input):
 	perfects = []
 	good = []
 	not_bad = []
 	match = False
 	for item in collection:
-		if item[0].startswith(user_input):
-			if user_input == item[0]:
-				match = True
+		# if item[0].startswith(user_input):
+		# 	if user_input == item[0]:
+		# 		match = True
+		# 	good.append(item[0])
+		# elif match and item[1] <= 2313585 and len(good) >= 10: # stop suggestions if it's rank is less than 0.1 
+		# 	if user_input in good:
+		# 		# good.remove(item[0])
+		# 		perfects.append(item[0])
+		# 		break
+		# else:
+		score = find_matches(user_input, item[0])
+		if score <= 0.5:
+			pass
+		elif score == 1:
+			perfects.append(item[0])
+		elif score >= .75:
 			good.append(item[0])
-		elif match and item[1] <= 2313585 and len(good) >= 10: # stop suggestions if it's rank is less than 0.1 
-			if user_input in good:
-				# good.remove(item[0])
-				perfects.append(item[0])
-				break
 		else:
-			score = find_matches(user_input, item[0])
-			if score <= 0.5:
-				pass
-			elif score == 1:
-				perfects.append(item[0])
-			elif score >= .75:
-				good.append(item[0])
-			else:
-				not_bad.append(item[0])
+			not_bad.append(item[0])
 	return dict(perfects=perfects, good=good, not_bad=not_bad)
 
-
-def find_matches(source, target):
-	splitter = math.ceil((25/100) * len(source))
-	splits = [source[i:i+splitter] for i in range(0, len(source), splitter)]
+def find_matches(user_input, target):
+	splitter = math.ceil((25/100) * len(target))
+	splits = [target[i:i+splitter] for i in range(0, len(target), splitter)]
 	matches = 0
 	for text in splits:
-		if text in target:
+		if text in user_input:
 			matches += 1
 	if matches is 0:
 		return 0
@@ -131,5 +154,32 @@ def find_matches(source, target):
 def words_to_ngrams(words, n, sep=""):
     return [sep.join(words[i:i+n]) for i in range(len(words)-n+1)]
 
+# def P(word, N=sum(WORDS.values())): 
+#     "Probability of `word`."
+#     return WORDS[word] / N
 
-# main()
+# def correction(word): 
+#     "Most probable spelling correction for word."
+#     return max(candidates(word), key=P)
+
+def candidates(word): 
+    "Generate possible spelling corrections for word."
+    return (known(word) and known(edits1(word)) or known(edits2(word)) or [word])
+
+def known(words): 
+    "The subset of `words` that appear in the dictionary of WORDS."
+    return set(w for w in words if w in WORDS)
+
+def edits1(word):
+	"All edits that are one edit away from `word`."
+	letters    = 'abcdefghijklmnopqrstuvwxyz'
+	splits     = [(word[:i], word[i:])    for i in range(len(word) + 1)]
+	deletes    = [L + R[1:]               for L, R in splits if R]
+	transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R)>1]
+	replaces   = [L + c + R[1:]           for L, R in splits if R for c in letters]
+	inserts    = [L + c + R               for L, R in splits for c in letters]
+	return set(deletes + transposes + replaces + inserts)
+
+def edits2(word): 
+    "All edits that are two edits away from `word`."
+    return (e2 for e1 in edits1(word) for e2 in edits1(e1))

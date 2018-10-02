@@ -22,4 +22,14 @@ def main():
 	print (end - start)
 	return collection
 	# print(a)
+
+def get_dict():
+	file_path = os.path.join(BASE_DIR, 'collection.tsv')
+	# file_path = os.path.join(BASE_DIR, 'test.tsv')
+	reader = csv.reader(open(file_path), delimiter='\t')
+	sortedlist = sorted(list(reader), key=lambda x:int(x[1]), reverse=True)
+	d = dict()
+	for item in sortedlist:
+		d[item[0]] = int(item[1])
+	return d
 main()
