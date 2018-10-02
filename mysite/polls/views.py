@@ -14,7 +14,7 @@ def search(request):
 	print(user_input)
 	if user_input is not None:
 		user_input = str(user_input).lower()
-		response = search_regx(user_input)
+		response = lets_do_it(user_input)
 	else:
 		response = (dict(msg= "No input priovided"))
 	return HttpResponse(json.dumps(response), content_type="application/json")
@@ -32,7 +32,7 @@ def do_search(user_input):
 			if user_input == item[0]:
 				match = True
 			directs.append(item[0])
-		elif match and item[1] <= 2313585 and len(directs) >= 10:
+		elif match and item[1] <= 2313585 and len(directs) >= 10: # stop suggestions if it's rank is less than 0.1 
 			if user_input in directs:
 				directs.remove(user_input)
 				priority.append(user_input)
@@ -86,6 +86,20 @@ def search_regx(user_input):
 	directs.sort(key = len)
 	suggestions.sort()
 	return dict(suggestions=(priority + directs + suggestions)[:25])
+
+def lets_do_it(user_input):
+	for item in collection:
+		find_matches(user_input, item)
+		
+		# for char in user_input:
+		# 	if char in item[0]:
+		# 		pass
+	return dict(ok="no")
+
+
+def find_matches(source, target):
+	pass
+	
 
 def words_to_ngrams(words, n, sep=""):
     return [sep.join(words[i:i+n]) for i in range(len(words)-n+1)]
