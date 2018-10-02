@@ -126,7 +126,7 @@ def find_matches(source, target):
 	if matches is 0:
 		return 0
 	else:
-		return matches/len(splits)
+		return matches/len(target)
 
 def words_to_ngrams(words, n, sep=""):
     return [sep.join(words[i:i+n]) for i in range(len(words)-n+1)]
