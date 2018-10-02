@@ -24,8 +24,8 @@ def do_search(user_input):
 	priority = []
 	directs = []
 	suggestions = []
-	pattern = '.*?'.join(user_input)
-	regex = re.compile(pattern)
+	# pattern = '.*?'.join(user_input)
+	# regex = re.compile(pattern)
 	match = False
 	for item in collection:
 		if item[0].startswith(user_input):
@@ -37,6 +37,8 @@ def do_search(user_input):
 				directs.remove(user_input)
 				priority.append(user_input)
 				break
+		elif user_input in item[0]:
+			suggestions.append(item[0])
 		elif abs(len(user_input) - len(item[0])) <= 2:
 			min_match = round(len(user_input)/ 4)
 			if user_input[0:min_match] == item[0][0:min_match] and user_input[-min_match:] == item[0][-min_match:]:
