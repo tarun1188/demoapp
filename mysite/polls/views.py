@@ -7,22 +7,25 @@ import json
 from django.http import HttpResponse
 
 def index(request):
-	user_input = request.GET.get('id')
+	return HttpResponse(200)
+
+def search(request):
+	user_input = request.GET.get('word')
 	print(user_input)
 	if user_input is not None:
 		user_input = str(user_input).lower()
-		response = search(user_input)
+		response = do_search(user_input)
 	else:
 		response = (dict(msg= "No input priovided"))
 	return HttpResponse(json.dumps(response), content_type="application/json")
 
-def search(user_input):
+def do_search(user_input):
 	# suggestions = []
 	priority = []
 	directs = []
 	suggestions = []
-	# pattern = '.*?'.join(user_input)
-	# regex = re.compile(pattern)
+	pattern = '.*?'.join(user_input)
+	regex = re.compile(pattern)
 	match = False
 	for item in collection:
 		if item[0].startswith(user_input):
