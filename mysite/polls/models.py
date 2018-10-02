@@ -7,6 +7,7 @@ from mysite.settings import BASE_DIR
 def main():
 	print(BASE_DIR)
 	current_milli_time = lambda: int(round(time.time() * 1000))
+	# file_path = os.path.join(BASE_DIR, 'test.tsv')
 	file_path = os.path.join(BASE_DIR, 'collection.tsv')
 	reader = csv.reader(open(file_path), delimiter='\t')
 	sortedlist = sorted(list(reader), key=lambda x:int(x[1]), reverse=True)

@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from . import models
+import math
 import re
 collection = models.main()
 import json
@@ -14,7 +15,7 @@ def search(request):
 	print(user_input)
 	if user_input is not None:
 		user_input = str(user_input).lower()
-		response = lets_do_it(user_input)
+		response = search_regx(user_input)
 	else:
 		response = (dict(msg= "No input priovided"))
 	return HttpResponse(json.dumps(response), content_type="application/json")
@@ -88,18 +89,44 @@ def search_regx(user_input):
 	return dict(suggestions=(priority + directs + suggestions)[:25])
 
 def lets_do_it(user_input):
+	perfects = []
+	good = []
+	not_bad = []
+	match = False
 	for item in collection:
-		find_matches(user_input, item)
-		
-		# for char in user_input:
-		# 	if char in item[0]:
-		# 		pass
-	return dict(ok="no")
+		if item[0].startswith(user_input):
+			if user_input == item[0]:
+				match = True
+			good.append(item[0])
+		elif match and item[1] <= 2313585 and len(good) >= 10: # stop suggestions if it's rank is less than 0.1 
+			if user_input in good:
+				# good.remove(item[0])
+				perfects.append(item[0])
+				break
+		else:
+			score = find_matches(user_input, item[0])
+			if score <= 0.5:
+				pass
+			elif score == 1:
+				perfects.append(item[0])
+			elif score >= .75:
+				good.append(item[0])
+			else:
+				not_bad.append(item[0])
+	return dict(perfects=perfects, good=good, not_bad=not_bad)
 
 
 def find_matches(source, target):
-	pass
-	
+	splitter = math.ceil((25/100) * len(source))
+	splits = [source[i:i+splitter] for i in range(0, len(source), splitter)]
+	matches = 0
+	for text in splits:
+		if text in target:
+			matches += 1
+	if matches is 0:
+		return 0
+	else:
+		return matches/len(splits)
 
 def words_to_ngrams(words, n, sep=""):
     return [sep.join(words[i:i+n]) for i in range(len(words)-n+1)]
