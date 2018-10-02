@@ -43,6 +43,8 @@ def do_search(user_input):
 			min_match = round(len(user_input)/ 4)
 			if user_input[0:min_match] == item[0][0:min_match] and user_input[-min_match:] == item[0][-min_match:]:
 				suggestions.append(item[0])
+			if len(directs) + len(suggestions) == 25:
+				break
 			# misses = 0
 			# index = 0
 			# modified_input = ""
