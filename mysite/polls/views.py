@@ -17,19 +17,15 @@ def search(request):
 	if user_input is not None:
 		user_input = str(user_input).lower()
 		response = suggest_with_corrections(user_input)[:24]
-		# response = score_matches(user_input)
 	else:
 		response = (dict(msg= "No input priovided"))
 	return HttpResponse(json.dumps(response), content_type="application/json")
 	# return HttpResponse(json.dumps(response), content_type="application/json")
 
 def do_search(user_input):
-	# suggestions = []
 	priority = []
 	directs = []
 	suggestions = []
-	# pattern = '.*?'.join(user_input)
-	# regex = re.compile(pattern)
 	match = False
 	for item in collection:
 		if item[0].startswith(user_input):
@@ -41,26 +37,12 @@ def do_search(user_input):
 				directs.remove(user_input)
 				priority.append(user_input)
 				break
-		# elif user_input in item[0]:
-		# 	suggestions.append(item[0])
 		elif abs(len(user_input) - len(item[0])) <= 2:
 			min_match = round(len(user_input)/ 4)
 			if user_input[0:min_match] == item[0][0:min_match] and user_input[-min_match:] == item[0][-min_match:]:
 				suggestions.append(item[0])
 			if len(directs) + len(suggestions) == 25:
 				break
-			# misses = 0
-			# index = 0
-			# modified_input = ""
-			# for char in user_input:
-			# 	if char != item[0][index]:
-			# 		misses += 1
-			# 	else:
-			# 		modified_input += char
-			# 	index += 1
-			# print(modified_input)
-			# if modified_input == user_input and misses >= 3:
-			# 	suggestions.append(item[0])
 
 	directs.sort(key = len)
 	return dict(suggestions=(priority + directs + suggestions)[:25])
@@ -116,18 +98,7 @@ def score_matches(user_input):
 	perfects = []
 	good = []
 	not_bad = []
-	match = False
 	for item in collection:
-		# if item[0].startswith(user_input):
-		# 	if user_input == item[0]:
-		# 		match = True
-		# 	good.append(item[0])
-		# elif match and item[1] <= 2313585 and len(good) >= 10: # stop suggestions if it's rank is less than 0.1 
-		# 	if user_input in good:
-		# 		# good.remove(item[0])
-		# 		perfects.append(item[0])
-		# 		break
-		# else:
 		score = find_matches(user_input, item[0])
 		if score <= 0.5:
 			pass
